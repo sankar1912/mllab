@@ -1,0 +1,286 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+
+df = pd.read_csv("reciepe_reviews.csv") 
+df["sentiment"] = df["stars"].apply(lambda x: 1 if x >= 4 else 0)
+
+features = ["user_reputation", "reply_count", "thumbs_up", 
+            "thumbs_down", "best_score", "recipe_number"]
+X = df[features]
+y = df["sentiment"]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+clf = DecisionTreeClassifier(max_depth=5, random_state=42)
+clf.fit(X_train, y_train)
+
+y_pred = clf.predict(X_test)
+
+
+print("Model Accuracy:", accuracy_score(y_test, y_pred))
+
+print("First 10 Predictions:", y_pred[:10])
+
+OP:
+
+Model Accuracy: 0.8583997800384933
+First 10 Predictions: [1 1 1 1 1 1 1 1 1 1]
+
+
+Without:
+
+import numpy as np
+import pandas as pd
+from sklearn.metrics import accuracy_score
+
+
+df = pd.read_csv('recipe_review.csv')
+
+df["sentiment"] = df["stars"].apply(lambda x: 1 if x >= 4 else 0)
+
+X = df[["user_reputation", "reply_count", "thumbs_up", "thumbs_down"]].values
+y = df["sentiment"].values
+
+def gini_impurity(y):
+    values, counts = np.unique(y, return_counts=True)
+    prob = counts / len(y)
+    return 1 - np.sum(prob ** 2)
+
+def best_split(X, y):
+    best_gini = 1
+    best_feature, best_value = None, None
+
+    for feature in range(X.shape[1]):
+        values = np.unique(X[:, feature])
+        for val in values:
+            left_mask = X[:, feature] <= val
+            right_mask = ~left_mask
+
+            if len(y[left_mask]) == 0 or len(y[right_mask]) == 0:
+                continue
+
+            gini_left = gini_impurity(y[left_mask])
+            gini_right = gini_impurity(y[right_mask])
+            gini = (len(y[left_mask]) * gini_left + len(y[right_mask]) * gini_right) / len(y)
+
+            if gini < best_gini:
+                best_gini = gini
+                best_feature = feature
+                best_value = val
+
+    return best_feature, best_value
+
+class Node:
+    def __init__(self, feature=None, value=None, left=None, right=None, label=None):
+        self.feature = feature
+        self.value = value
+        self.left = left
+        self.right = right
+        self.label = label
+
+def build_tree(X, y, depth=0, max_depth=3):
+    if len(set(y)) == 1: 
+        return Node(label=y[0])
+
+    if depth >= max_depth:
+        return Node(label=np.bincount(y).argmax())
+
+    feature, value = best_split(X, y)
+    if feature is None:
+        return Node(label=np.bincount(y).argmax())
+
+    left_mask = X[:, feature] <= value
+    right_mask = ~left_mask
+
+    left_subtree = build_tree(X[left_mask], y[left_mask], depth + 1, max_depth)
+    right_subtree = build_tree(X[right_mask], y[right_mask], depth + 1, max_depth)
+
+    return Node(feature, value, left_subtree, right_subtree)
+
+def predict_tree(node, x):
+    if node.label is not None:
+        return node.label
+    if x[node.feature] <= node.value:
+        return predict_tree(node.left, x)
+    return predict_tree(node.right, x)
+
+
+tree = build_tree(X, y, max_depth=3)
+
+new_data = np.array([[40, 4, 10, 2], [15, 2, 3, 5], [75, 8, 30, 1]])  # Example test data
+predictions = [predict_tree(tree, x) for x in new_data]
+
+
+
+
+print("Model Accuracy:", accuracy_score(y_train, y_pred[:len(y_train)]))
+print("Predictions:", predictions)
+
+OP:
+
+Model Accuracy: 0.6861464420763149
+Predictions: [1, 0, 1]
+
+Naive Bayes:
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score, classification_report
+
+data = pd.read_csv('reciepe_reviews.csv')
+
+X = data['text']
+y = data['stars']
+X=X.fillna('')
+y=y.fillna(0)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+vectorizer = CountVectorizer()
+X_train_counts = vectorizer.fit_transform(X_train)
+X_test_counts = vectorizer.transform(X_test)
+
+clf = MultinomialNB()
+
+
+clf.fit(X_train_counts, y_train)
+
+y_pred = clf.predict(X_test_counts)
+
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print(classification_report(y_test, y_pred))
+
+
+OP:
+
+Model Accuracy: 0.6861464420763149
+Predictions: [1, 0, 1]
+Mean Squared Error: 6.028828332223689e-05
+First 10 Predictions: [-0.01469067  0.00126027  0.00014073  0.00126027  0.02717982 -0.04211407
+  0.00126027  0.00126027  0.00126027  0.05198032]
+Feature Importances:
+ISE_USD: 0.9634
+SP: 0.0026
+DAX: 0.0000
+FTSE: 0.0054
+NIKKEI: 0.0105
+BOVESPA: 0.0066
+EU: 0.0022
+EM: 0.0092
+Model Accuracy: 0.8583997800384933
+First 10 Predictions: [1 1 1 1 1 1 1 1 1 1]
+Accuracy: 0.772614792411328
+              precision    recall  f1-score   support
+
+           0       0.43      0.13      0.20       340
+           1       1.00      0.02      0.04        46
+           2       0.00      0.00      0.00        44
+           3       0.00      0.00      0.00        98
+           4       0.35      0.18      0.24       321
+           5       0.80      0.97      0.88      2788
+
+    accuracy                           0.77      3637
+   macro avg       0.43      0.22      0.23      3637
+weighted avg       0.70      0.77      0.71      3637
+
+
+Without:
+
+import pandas as pd
+import numpy as np
+from collections import defaultdict
+import re
+
+data = pd.read_csv('reciepe_reviews.csv')
+
+X = data['text']
+y = data['stars']
+X=X.fillna('')
+y=y.fillna(0)
+
+def preprocess_text(text):
+    text = text.lower()
+    text = re.sub(r'\W', ' ', text)
+    return text
+X = X.apply(preprocess_text)
+
+class NaiveBayes:
+    def __init__(self):
+        self.class_priors = {}
+        self.word_counts = defaultdict(lambda: defaultdict(int))
+        self.class_word_counts = defaultdict(int)
+        self.vocab = set()
+
+    def fit(self, X, y):
+        total_count = len(y)
+        for label in y:
+            self.class_priors[label] = self.class_priors.get(label, 0) + 1
+        for i in range(len(X)):
+            label = y[i]
+            words = X[i].split()
+            self.class_word_counts[label] += len(words)
+            for word in words:
+                self.word_counts[label][word] += 1
+                self.vocab.add(word)
+        for label in self.class_priors:
+            self.class_priors[label] /= total_count
+
+    def predict(self, X):
+        predictions = []
+        for text in X:
+            words = text.split()
+            class_scores = {}
+            for label in self.class_priors:
+                score = np.log(self.class_priors[label])
+                for word in words:
+                    word_count = self.word_counts[label][word]
+                    total_count = self.class_word_counts[label]
+                    score += np.log((word_count + 1) / (total_count + len(self.vocab)))
+                class_scores[label] = score
+            predictions.append(max(class_scores, key=class_scores.get))
+        return predictions
+nb = NaiveBayes()
+nb.fit(X, y)
+
+y_pred = nb.predict(X)
+
+accuracy = np.mean(y_pred == y)
+print("Accuracy:", accuracy)
+
+OP:
+
+Model Accuracy: 0.6861464420763149
+Predictions: [1, 0, 1]
+Mean Squared Error: 6.028828332223689e-05
+First 10 Predictions: [-0.01469067  0.00126027  0.00014073  0.00126027  0.02717982 -0.04211407
+  0.00126027  0.00126027  0.00126027  0.05198032]
+Feature Importances:
+ISE_USD: 0.9634
+SP: 0.0026
+DAX: 0.0000
+FTSE: 0.0054
+NIKKEI: 0.0105
+BOVESPA: 0.0066
+EU: 0.0022
+EM: 0.0092
+Model Accuracy: 0.8583997800384933
+First 10 Predictions: [1 1 1 1 1 1 1 1 1 1]
+Accuracy: 0.772614792411328
+              precision    recall  f1-score   support
+
+           0       0.43      0.13      0.20       340
+           1       1.00      0.02      0.04        46
+           2       0.00      0.00      0.00        44
+           3       0.00      0.00      0.00        98
+           4       0.35      0.18      0.24       321
+           5       0.80      0.97      0.88      2788
+
+    accuracy                           0.77      3637
+   macro avg       0.43      0.22      0.23      3637
+weighted avg       0.70      0.77      0.71      3637
+
+Accuracy: 0.8022219777802222

@@ -1,0 +1,152 @@
+### Spark Shell Important Functions — Usage and Meaning Cheat Sheet
+
+---
+
+#### ✅ 1. `map`
+
+**Meaning:** Transform each element (1-to-1 transformation)
+**Usage:**
+
+```scala
+val nums = sc.parallelize(1 to 5)
+val doubled = nums.map(x => x * 2)
+```
+
+#### ✅ 2. `filter`
+
+**Meaning:** Keep elements matching a condition
+**Usage:**
+
+```scala
+val even = nums.filter(x => x % 2 == 0)
+```
+
+#### ✅ 3. `flatMap`
+
+**Meaning:** Transform elements and flatten the results
+**Usage:**
+
+```scala
+val words = lines.flatMap(line => line.split(" "))
+```
+
+#### ✅ 4. `reduce`
+
+**Meaning:** Aggregate all elements to a single result
+**Usage:**
+
+```scala
+val sum = nums.reduce(_ + _)
+```
+
+#### ✅ 5. `reduceByKey`
+
+**Meaning:** Aggregate values by key
+**Usage:**
+
+```scala
+val counts = pairs.reduceByKey(_ + _)
+```
+
+#### ✅ 6. `groupByKey`
+
+**Meaning:** Group values with the same key
+**Usage:**
+
+```scala
+val grouped = pairs.groupByKey()
+```
+
+#### ✅ 7. `sortBy`
+
+**Meaning:** Sort elements by computed key
+**Usage:**
+
+```scala
+val sorted = nums.sortBy(x => x)
+```
+
+#### ✅ 8. `distinct`
+
+**Meaning:** Remove duplicate elements
+**Usage:**
+
+```scala
+val distinctNums = nums.distinct()
+```
+
+#### ✅ 9. `count`
+
+**Meaning:** Count total number of elements
+**Usage:**
+
+```scala
+val total = nums.count()
+```
+
+#### ✅ 10. `countByValue`
+
+**Meaning:** Count occurrences of each unique value
+**Usage:**
+
+```scala
+val countMap = nums.countByValue()
+```
+
+#### ✅ 11. `take`
+
+**Meaning:** Get first N elements
+**Usage:**
+
+```scala
+val first3 = nums.take(3)
+```
+
+#### ✅ 12. `collect`
+
+**Meaning:** Bring all RDD data to driver as array
+**Usage:**
+
+```scala
+val arr = nums.collect()
+```
+
+#### ✅ 13. `foreach`
+
+**Meaning:** Apply a function on each element
+**Usage:**
+
+```scala
+nums.foreach(x => println(x))
+```
+
+#### ✅ 14. `union`
+
+**Meaning:** Merge two RDDs
+**Usage:**
+
+```scala
+val merged = rdd1.union(rdd2)
+```
+
+#### ✅ 15. `sample`
+
+**Meaning:** Take a random sample from RDD
+**Usage:**
+
+```scala
+val sample = nums.sample(false, 0.1)
+```
+
+#### ✅ 16. `intersection`
+
+**Meaning:** Get common elements (no duplicates)
+**Usage:**
+
+```scala
+val common = rdd1.intersection(rdd2)
+```
+
+---
+
+If you want, I can also prepare cheat sheets for DataFrames or SQL functions!
